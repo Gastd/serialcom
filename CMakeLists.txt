@@ -6,4 +6,4 @@ add_definitions(-g -O3 -Wall)
 
 set(SOURCES src/serialcom.c)
 
-add_library(SerialComLib SHARED ${SOURCES})
+add_library(serialcomlib SHARED ${SOURCES})
