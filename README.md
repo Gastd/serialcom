@@ -34,7 +34,10 @@ include_directories(${CMAKE_CURRENT_BINARY_DIR}/serialcom-src/include)
 
 add_executable( <YOUR_EXECUTABLE> <YOUR_CODE>.cpp )
 add_dependencies(<YOUR_EXECUTABLE> serialcom)
-target_link_libraries( <YOUR_EXECUTABLE> ${binary_dir}/${CMAKE_FIND_LIBRARY_PREFIXES}serialcomlib.so -pthread)
+target_link_libraries( <YOUR_EXECUTABLE>
+    ${binary_dir}/${CMAKE_FIND_LIBRARY_PREFIXES}serialcomlib.so
+    -pthread
+)
 ```
 
 Documentation
