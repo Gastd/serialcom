@@ -12,7 +12,7 @@ Usage
 -----
 
 A CMake code is provided in hopes of help the link process.
-To link this library against your project using the code below in your CMakeLists.txt file.
+To link this library against your project use the code below in your CMakeLists.txt file.
 
 ```bash
 include(ExternalProject)
