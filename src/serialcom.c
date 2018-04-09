@@ -30,7 +30,8 @@
 #define SERIALCOM_COMPORTADDRESS_4 0x2E8
 
 /*! \var SEM *pComPortSemaphores[4] 
-* Vetor de ponteiros para semaforos. Cada elemento desse vetor eh um ponteiro para o semaforo associado aa porta X, com X = 1, 2, 3 ou 4. Os semaforos de cada porta sao iniciados na chamada aa funcao serialcom_init(). Para uso interno pelas funcoes serialcom_semwait() e serialcom_semsignal(). */
+* Vetor de ponteiros para semaforos. Cada elemento desse vetor eh um ponteiro para o semaforo associado aa porta X, com X = 1, 2, 3 ou 4.
+* Os semaforos de cada porta sao iniciados na chamada aa funcao serialcom_init(). Para uso interno pelas funcoes serialcom_semwait() e serialcom_semsignal(). */
 sem_t *pComPortSemaphores[4] = {NULL, NULL, NULL, NULL}; 
 
 // funcao de uso interno apenas
@@ -235,7 +236,8 @@ void serialcom_semsignal(PSERIALPORTCONFIG pSerialPortConfig)
 * byte enviado, permitindo assim ativar o driver externo de uma porta com conversor RS-485. Nessa situao, essa funcao somente retorna 
 * quando o byte tiver sido enviado. Caso contrrio, a funcao somente escrever no buffer de sada o byte apontado por pData, retornando em * seguida.
 * \param pData Ponteiro para o byte que ser enviado.
-* \return SERIALCOM_SUCCESS : Dado escrito no registro de sada com sucesso. Entretanto, isso significa apenas que uma transmisso est em curso. Para se certificar de que o dado foi efetivamente transmitido, deve-se fazer uso da funcao serialcom_status()
+* \return SERIALCOM_SUCCESS : Dado escrito no registro de sada com sucesso. Entretanto, isso significa apenas que uma transmisso est em curso.
+* Para se certificar de que o dado foi efetivamente transmitido, deve-se fazer uso da funcao serialcom_status()
 * \return SERIALCOM_ERROR_MAXWAITENDOFTRANSMISSION : Situao de erro em que a funcao ficou aguardando por um perodo de at 5 frames para disponibilizao do registro de sada da porta
 * \warning Essa funcao fica bloqueada enquanto o ltimo byte escrito no buffer de sada ainda no tiver sido enviado.
 */
@@ -310,7 +312,8 @@ int serialcom_receivebyte(PSERIALPORTCONFIG pSerialPortConfig, unsigned char *pD
 * Funcao que l o registro de status da porta serial descrita por pSerialPortConfig. 
 * \param pSerialPortConfig Ponteiro para estrutura SERIALPORTCONFIG que guarda informaes de configurao da porta serial no 
 * contexto do thread de chamada.
-* \return O valor de retorno tem os bits setados conforme que o dado foi efetivamente enviadoos eventos que ocorreram com a porta serial, que podem ser testados usando um 
+* \return O valor de retorno tem os bits setados conforme que o dado foi efetivamente enviadoos eventos que ocorreram com a porta serial,
+* que podem ser testados usando um 
 * teste lgico E bit a bit com as seguintes mscaras: 
 * \return SERIALCOM_STATUSMASK_ERROR_RX_FIFO  
 * \return SERIALCOM_STATUSMASK_EMPTY_DH_REGISTERS 
@@ -327,9 +330,18 @@ int serialcom_receivebyte(PSERIALPORTCONFIG pSerialPortConfig, unsigned char *pD
 /************* Rotinas Genericas de Manipulacao da porta serial com acesso interno *****************/
 
 /*! \mainpage 
-A biblioteca serialcom foi concebida para dar funcionalidade de comunicao serial para processos LINUX com a extenso de tempo real RTAI. Ela  disponibilizada na forma de cdigo fonte nos arquivos serialcom.c e serialcom.h. Essa biblioteca foi concebida para ser compatvel com processos com multiplos threads, e permite ainda que vrios threads acessem a mesma porta serial. No caso, esto implementadas funes para COM1, COM2, COM3 e COM4. E ainda, a biblioteca implementa funes de controle de acesso por semforo, o que permite que uma mesma porta serial possa ser acessada por um s thread por vez. Dependendendo do tipo de protocolo, o uso de semforos se faz necessrio. 
+A biblioteca serialcom foi concebida para dar funcionalidade de comunicao serial para processos LINUX com a extenso de tempo real RTAI.
+Ela  disponibilizada na forma de cdigo fonte nos arquivos serialcom.c e serialcom.h.
+Essa biblioteca foi concebida para ser compatvel com processos com multiplos threads, e permite ainda que vrios threads acessem a mesma porta serial.
+No caso, esto implementadas funes para COM1, COM2, COM3 e COM4.
+E ainda, a biblioteca implementa funes de controle de acesso por semforo, o que permite que uma mesma porta serial possa ser acessada por um s thread por vez.
+Dependendendo do tipo de protocolo, o uso de semforos se faz necessrio. 
 
-O projeto acompanha um exemplo no diretrio test. Para compilar o exemplo, basta fazer make. O resultado  o arquivo eval_serialcom. Antes de executar esse arquivo  necessrio pelo menos uma vez aps ter iniciado o sistema carregar os mdulos do RTAI. Para isso, basta executar o script loadmods.
+O projeto acompanha um exemplo no diretrio test.
+Para compilar o exemplo, basta fazer make.
+O resultado  o arquivo eval_serialcom.
+Antes de executar esse arquivo  necessrio pelo menos uma vez aps ter iniciado o sistema carregar os mdulos do RTAI.
+Para isso, basta executar o script loadmods.
 
 */
 
