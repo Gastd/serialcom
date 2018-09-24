@@ -171,7 +171,7 @@ int serialcom_init(PSERIALPORTCONFIG pSerialPortConfig, int ComPortNumber, char 
 	tcflush(pSerialPortConfig->fd, TCIFLUSH);
 	tcsetattr(pSerialPortConfig->fd,TCSANOW,&pSerialPortConfig->newtio);
 
-//		printf("\n speed set to %X\n\n", cfgetispeed (&pSerialPortConfig->newtio)); exit(1);
+	// printf("\n speed set to %X\n\n", cfgetispeed (&pSerialPortConfig->newtio)); exit(1);
 	
 	pSerialPortConfig->ComPortBPS = ComPortBPS;
 	pSerialPortConfig->ComPortNumber = ComPortNumber;
@@ -187,7 +187,7 @@ int serialcom_init(PSERIALPORTCONFIG pSerialPortConfig, int ComPortNumber, char 
 
 	sprintf(semname,"CoSem%i",ComPortNumber);
 	pComPortSemaphores[ComPortNumber-1] = sem_open(semname,O_CREAT,S_IRUSR|S_IWUSR,1);
-//	printf("\n Semaforo %s: %X\n",semname, pComPortSemaphores[ComPortNumber-1]);
+	// printf("\n Semaforo %s: %X\n",semname, pComPortSemaphores[ComPortNumber-1]);
 
 	return SERIALCOM_SUCCESS;
 }
@@ -292,17 +292,17 @@ int serialcom_receivebyte(PSERIALPORTCONFIG pSerialPortConfig, unsigned char *pD
 	{
 		nbytesreceived = read(pSerialPortConfig->fd,pData,1);
 		if(nbytesreceived==1){
-//			printf("\n FILE = %s, LINE = %i",__FILE__,__LINE__);
+			// printf("\n FILE = %s, LINE = %i",__FILE__,__LINE__);
 			return(SERIALCOM_SUCCESS);
 		}
-//		serialcom_delayus(0.2*pSerialPortConfig->FramePeriodUS);
+		// serialcom_delayus(0.2*pSerialPortConfig->FramePeriodUS);
 		gettimeofday(&time, NULL);
 		ElapsedTime = ((time.tv_sec - timereset.tv_sec)*1e6 + (time.tv_usec - timereset.tv_usec));
-//			printf("\n ElapsedTime = %f",ElapsedTime);
+		// printf("\n ElapsedTime = %f",ElapsedTime);
 		if(ElapsedTime >= MaximaEsperaUS){
-//			printf("\n FILE = %s, LINE = %i",__FILE__,__LINE__);
-//			printf("\n ElapsedTime = %f",ElapsedTime);
-	//		printf("\n Porta %i, Retornando estado %i", pSerialPortConfig->ComPortNumber, SERIALCOM_ERROR_MAXWAITFORRECEPTION);
+			// printf("\n FILE = %s, LINE = %i",__FILE__,__LINE__);
+			// printf("\n ElapsedTime = %f",ElapsedTime);
+			// printf("\n Porta %i, Retornando estado %i", pSerialPortConfig->ComPortNumber, SERIALCOM_ERROR_MAXWAITFORRECEPTION);
 			return(SERIALCOM_ERROR_MAXWAITFORRECEPTION);  // Dado nao chegou no tempo estipulado.
 		}
 	}
