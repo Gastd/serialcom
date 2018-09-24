@@ -1,7 +1,7 @@
 /*******************************************************************************
 * \file serialcom.c
-* \brief  Implementa modulo basico de acesso � porta serial.
-// Observa�oes:
+* \brief  Implementa modulo basico de acesso a porta serial.
+// Observacoes:
 //    - 
 *******************************************************************************/
 #include <stdio.h>
