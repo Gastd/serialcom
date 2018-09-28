@@ -43,29 +43,36 @@ target_link_libraries( <YOUR_EXECUTABLE>
 #### API
 
 ```c
-SERIALPORTCONFIG serialPortConfig;
-char* data;
+#include <serialcom.h>
 
-// Init the serial port
-if((err = serialcom_init(&serialPortConfig, 1, "/dev/ttyUSB0", 9600)) != SERIALCOM_SUCCESS)
+int main()
 {
-    return err;
-}
+    SERIALPORTCONFIG serialPortConfig;
+    char* data;
 
-// Receive byte
-if((err = serialcom_receivebyte(&serialPortConfig, &data, 1e4)) != SERIALCOM_SUCCESS)
-{
-    return err;
-}
+    // Init the serial port
+    if((err = serialcom_init(&serialPortConfig, 1, "/dev/ttyUSB0", 9600)) != SERIALCOM_SUCCESS)
+    {
+        return err;
+    }
 
-// Send the same byte
-serialcom_sendbyte(&serialPortConfig, (unsigned char*) &data);
-usleep(5);
+    // Receive byte
+    if((err = serialcom_receivebyte(&serialPortConfig, &data, 1e4)) != SERIALCOM_SUCCESS)
+    {
+        return err;
+    }
 
-// Close the serial port
-if((err = serialcom_close(&gps_SerialPortConfig_)) != SERIALCOM_SUCCESS)
-{
-    return err;
+    // Send the same byte
+    serialcom_sendbyte(&serialPortConfig, (unsigned char*) &data);
+    usleep(5);
+
+    // Close the serial port
+    if((err = serialcom_close(&gps_SerialPortConfig_)) != SERIALCOM_SUCCESS)
+    {
+        return err;
+    }
+
+    return 0;
 }
 ```
 
