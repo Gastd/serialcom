@@ -1,15 +1,15 @@
 /*******************************************************************************
 * \file serialcom.c
-* \brief  Implementa modulo basico de acesso a porta serial.
-// Observacoes:
+* \brief  Implements the basic module to access the serial port.
+// Observations:
 //    - 
 *******************************************************************************/
 #include <stdio.h>
 #include <math.h>
-#include <unistd.h> /* for libc5 */
-#include <sys/io.h> /* for glibc */
-#include <fcntl.h>           /* For O_* constants */
-#include <sys/stat.h>        /* For mode constants */
+#include <unistd.h> 	/* for libc5 */
+#include <sys/io.h> 	/* for glibc */
+#include <fcntl.h>		/* For O_* constants */
+#include <sys/stat.h>	/* For mode constants */
 #include <semaphore.h>
 #include <time.h>
 #include <sys/time.h>
@@ -17,21 +17,23 @@
 #include "serialcom.h" 
 
 /*! \def SERIALCOM_COMPORTADDRESS_1 
-* Endereco base da porta serial COM1. Uso interno. */
+* Serial port COM1's base address. Internal use. */
 #define SERIALCOM_COMPORTADDRESS_1 0x3F8
 /*! \def SERIALCOM_COMPORTADDRESS_2 
-* Endereco base da porta serial COM2. Uso interno. */
+* Serial port COM2's base address. Internal use. */
 #define SERIALCOM_COMPORTADDRESS_2 0x2F8
 /*! \def SERIALCOM_COMPORTADDRESS_3 
-* Endereco base da porta serial COM3. Uso interno. */
+* Serial port COM3's base address. Internal use. */
 #define SERIALCOM_COMPORTADDRESS_3 0x3E8
 /*! \def SERIALCOM_COMPORTADDRESS_4 
-* Endereco base da porta serial COM4. Uso interno. */
+* Serial port COM4's base address. Internal use. */
 #define SERIALCOM_COMPORTADDRESS_4 0x2E8
 
 /*! \var SEM *pComPortSemaphores[4] 
-* Vetor de ponteiros para semaforos. Cada elemento desse vetor eh um ponteiro para o semaforo associado aa porta X, com X = 1, 2, 3 ou 4.
-* Os semaforos de cada porta sao iniciados na chamada aa funcao serialcom_init(). Para uso interno pelas funcoes serialcom_semwait() e serialcom_semsignal(). */
+* Semaphores' pointer vector.
+* Each element in this vector is a semaphores' pointer associated to X port, with X = 1, 2, 3 or 4.
+* The serialcom_init() function initializes each serial port's semaphores.
+* Then, they are used internally by serialcom_semwait() and serialcom_semsignal(). */
 sem_t *pComPortSemaphores[4] = {NULL, NULL, NULL, NULL}; 
 
 // funcao de uso interno apenas
@@ -47,19 +49,20 @@ inline void serialcom_delayus(double timeus)
 	} while (((time.tv_sec - timereset.tv_sec)*1e6 + (time.tv_usec - timereset.tv_usec)) < timeus);
 }
 
-/************* Rotinas Genericas de Manipulacao da porta serial com acesso externo *****************/
+/************* Serial port manipulation routines *****************/
 /*! \fn int serialcom_init(PSERIALPORTCONFIG pSerialPortConfig, int ComPortNumber, unsigned long int ComPortBPS)
-* Funcao que inicia a porta serial ComPortNumber com a taxa dada em BPS por ComPortBPS. Essa funcao dever ser chamada por cada thread 
-* que tenha acesso  porta serial ComPortNumber. Seus argumentos de chamada so:
-* \param pSerialPortConfig Ponteiro para estrutura SERIALPORCONFIG que guarda informaes de configurao da porta serial no 
-* contexto do thread de chamada. Mesmo que uma dada porta serial seja utilizada por diversos threads, cada thread dever ter a sua 
-* estrutura SERIALPORCONFIG.
-* \param ComPortNumber Numero da porta serial, no intervalo de 1 a 4.
-* \param ComPortBPS Taxa de comunicao em BPS, no intervalo de 2 a 115200.
-* \return SERIALCOM_SUCCESS : Porta iniciada com sucesso. 
-* \return SERIALCOM_ERROR_INCORRECTPORTNUMBER : Erro, corresponde a um ComPortNumber invlido.
-* \return SERIALCOM_ERROR_MAXBPSPRECISION : Erro, a taxa ComPortBPS no pode ser realizada com erro inferior a. SERIALCOM_MAXBPSPRECISION. 
-* \return SERIALCOM_ERROR_IOPL : Erro, corresponde a uma tentativa de executar o programa sem que se tenha acesso privilegiado de administrador a portas de E/S. 
+* Initialize ComPortNumber with baud-rate given by ComPortBPS.
+* This function must be called for each thread that has access to ComPortNumber.
+* The arguments are:
+* \param pSerialPortConfig Pointer to SERIALPORCONFIG that holds information about
+* the serial port in context of the calling thread.
+* This function handles access of several threads. For that, each one must have your own SERIALPORCONFIG struct.
+* \param ComPortNumber Serial port number. It must be between [1, 4].
+* \param ComPortBPS Communication rate in BPS. It must be between [2, 115200].
+* \return SERIALCOM_SUCCESS : Successful initialization.
+* \return SERIALCOM_ERROR_INCORRECTPORTNUMBER : Error, ComPortNumber invalid.
+* \return SERIALCOM_ERROR_MAXBPSPRECISION : Error, ComPortBPS can not be used. ComPortBPS > SERIALCOM_MAXBPSPRECISION.
+* \return SERIALCOM_ERROR_IOPL : Error, software tried to execute access without administrator rights for I/O ports.
 */
 int serialcom_init(PSERIALPORTCONFIG pSerialPortConfig, int ComPortNumber, char *pComPortDevice, unsigned long int ComPortBPS)
 {
@@ -200,14 +203,14 @@ int serialcom_close(PSERIALPORTCONFIG pSerialPortConfig)
 }
 
 /*! \fn void serialcom_semwait(PSERIALPORTCONFIG pSerialPortConfig)
-* Funcao que aguarda semforo para acessar a porta descrita por pSerialPortConfig. Juntamente com serialcom_semsignal, pode-se 
-* garantir o acesso exclusivo de um thread  porta serial. 
-* \param pSerialPortConfig Ponteiro para estrutura SERIALPORTCONFIG que guarda informaes de configurao da porta serial no 
-* contexto do thread de chamada. Mesmo que uma dada porta serial seja utilizada por diversos threads, cada thread dever ter a sua 
-* estrutura SERIALPORTCONFIG..
-* \warning Se uma determinada porta somente  gerenciada por um s thread, no h necessidade de se usar essas funes de semforo. As 
-* funes de semforo tm somente utilizade em situaes em que mais de um thread pode acessar a porta serial X, com X = 1, 2, 3 ou 4.
-* \warning Aps concluir o acesso  porta serial cedido por essa funcao, deve-se chamar serialcom_semsignal para liberar o semforo
+* Function that waits for the semaphore to access the pSerialPortConfig.
+* A thread can guarantee its sole access to a serial port using this function with serialcom_semsignal.
+* \param pSerialPortConfig Pointer to SERIALPORCONFIG that holds information about
+* the serial port in context of the calling thread.
+* This function handles access of several threads. For that, each one must have your own SERIALPORCONFIG struct.
+* \warning There is no need to use the semaphores' functions if a serial port is used by just one thread.
+* The semaphores' functions must be used only when more than a thread uses the same serial port X.
+* \warning After each access, the port must be released with serialcom_semsignal function.
 */
 void serialcom_semwait(PSERIALPORTCONFIG pSerialPortConfig)
 {
@@ -215,13 +218,13 @@ void serialcom_semwait(PSERIALPORTCONFIG pSerialPortConfig)
 }
 
 /*! \fn void serialcom_semsignal(PSERIALPORTCONFIG pSerialPortConfig)
-* Funcao que libera semforo que foi previamente cedido por serialcom_semwait para acessar a porta descrita por pSerialPortConfig.  
-* \param pSerialPortConfig Ponteiro para estrutura SERIALPORTCONFIG que guarda informaes de configurao da porta serial no 
-* contexto do thread de chamada. Mesmo que uma dada porta serial seja utilizada por diversos threads, cada thread dever ter a sua 
-* estrutura SERIALPORTCONFIG..
-* \warning Se uma determinada porta somente  gerenciada por um s thread, no h necessidade de se usar essas funes de semforo. As 
-* funes de semforo tm somente utilizade em situaes em que mais de um thread pode acessar a porta serial X, com X = 1, 2, 3 ou 4.
-* \warning Aps concluir o acesso  porta serial cedido por essa funcao, deve-se chamar serialcom_semsignal para liberar o semforo
+* Function releases the serial port semaphore, which was previously closed by serialcom_semwait function.
+* \param pSerialPortConfig Pointer to SERIALPORCONFIG that holds information about
+* the serial port in context of the calling thread.
+* This function handles access of several threads. For that, each one must have your own SERIALPORCONFIG struct.
+* \warning There is no need to use the semaphores' functions if a serial port is used by just one thread.
+* The semaphores' functions must be used only when more than a thread uses the same serial port X.
+* \warning After each access, the port must be released with serialcom_semsignal function.
 */
 void serialcom_semsignal(PSERIALPORTCONFIG pSerialPortConfig)
 {
@@ -229,17 +232,20 @@ void serialcom_semsignal(PSERIALPORTCONFIG pSerialPortConfig)
 }
 
 /*! \fn int serialcom_sendbyte(PSERIALPORTCONFIG pSerialPortConfig, unsigned char *pData)
-* Funcao que envia um byte apontado por pData pela porta serial descrita por pSerialPortConfig.   
-* \param pSerialPortConfig Ponteiro para estrutura SERIALPORTCONFIG que guarda informaes de configurao da porta serial no 
-* contexto do thread de chamada. Mesmo que uma dada porta serial seja utilizada por diversos threads, cada thread dever ter a sua 
-* estrutura SERIALPORTCONFIG. Se SERIALCOM_USE_RS485 = 1, ento o sinal RTS ser colocado em nvel lgico 1 enquanto durar o frame do 
-* byte enviado, permitindo assim ativar o driver externo de uma porta com conversor RS-485. Nessa situao, essa funcao somente retorna 
-* quando o byte tiver sido enviado. Caso contrrio, a funcao somente escrever no buffer de sada o byte apontado por pData, retornando em * seguida.
-* \param pData Ponteiro para o byte que ser enviado.
-* \return SERIALCOM_SUCCESS : Dado escrito no registro de sada com sucesso. Entretanto, isso significa apenas que uma transmisso est em curso.
-* Para se certificar de que o dado foi efetivamente transmitido, deve-se fazer uso da funcao serialcom_status()
-* \return SERIALCOM_ERROR_MAXWAITENDOFTRANSMISSION : Situao de erro em que a funcao ficou aguardando por um perodo de at 5 frames para disponibilizao do registro de sada da porta
-* \warning Essa funcao fica bloqueada enquanto o ltimo byte escrito no buffer de sada ainda no tiver sido enviado.
+* Function sends one byte pointed by pData through pSerialPortConfig.
+* \param pSerialPortConfig Pointer to SERIALPORCONFIG that holds information about
+* the serial port in context of the calling thread.
+* This function handles access of several threads. For that, each one must have your own SERIALPORCONFIG struct.
+* When SERIALCOM_USE_RS485 = 1, the function set RTS signal to logical level 1 while last the byte frame sent,
+* allowing externally activation of the RS-485 driver.
+* In this situation, the function will return only when the byte is sent.
+* Otherwise, the function will write in output buffer the byte pointed by pData, returning after that.
+* \param pData Pointer to the byte that has to be sent.
+* \return SERIALCOM_SUCCESS : Data was written successfully in the output buffer.
+* However, it means that the transmission is in progress. To certify the successful transmission, use serialcom_status.
+* \return SERIALCOM_ERROR_MAXWAITENDOFTRANSMISSION : The function waited for the maximum time of 5 frames to
+* the output buffer to be available.
+* \warning This function pauses until the last byte written in the output buffer is has not been sent.
 */
 int serialcom_sendbyte(PSERIALPORTCONFIG pSerialPortConfig, unsigned char *pData)
 {
@@ -251,7 +257,7 @@ int serialcom_sendbyte(PSERIALPORTCONFIG pSerialPortConfig, unsigned char *pData
 	#if SERIALCOM_USE_RS485
 	ioctl(pSerialPortConfig->fd, TIOCMGET, &status); /* get the serial port status */
 	status &= ~TIOCM_RTS;
-	ioctl(pSerialPortConfig->fd, TIOCMSET, &status); //setar RTS = 1.
+	ioctl(pSerialPortConfig->fd, TIOCMSET, &status); //set RTS = 1.
 	#endif
 	
 	if (write(pSerialPortConfig->fd, pData, 1) < 0) return SERIALCOM_ERROR_MAXWAITENDOFTRANSMISSION;
@@ -259,23 +265,22 @@ int serialcom_sendbyte(PSERIALPORTCONFIG pSerialPortConfig, unsigned char *pData
 	#if SERIALCOM_USE_RS485
 	ioctl(pSerialPortConfig->fd, TIOCMGET, &status); /* get the serial port status */
 	status |= TIOCM_RTS;
-	ioctl(pSerialPortConfig->fd, TIOCMSET, &status); //setar RTS = 0.
+	ioctl(pSerialPortConfig->fd, TIOCMSET, &status); //set RTS = 0.
 	#endif
 
 	return SERIALCOM_SUCCESS;
 }
 
 /*! \fn serialcom_receivebyte(PSERIALPORTCONFIG pSerialPortConfig, unsigned char *pData, double MaximaEsperaUS)
-* Funcao que aguarda um byte chegar pela porta serial descrita por pSerialPortConfig por um tempo mximo dado por MaximaEsperaUS, dado em 
-* microsegundos. Se um dado chegar dentro do perodo dado por MaximaEsperaUS, o mesmo ser colocado na varivel apontada por pData. 
-* \param pSerialPortConfig Ponteiro para estrutura SERIALPORTCONFIG que guarda informaes de configurao da porta serial no 
-* contexto do thread de chamada.
-* \param pData Ponteiro para o byte recebido.
-* \param MaximaEsperaUS Tempo mximo de espera pela chegada de um byte pela porta. Se MaximaEsperaUS 
-* \return SERIALCOM_SUCCESS : Operao realizada com sucesso. Um byte foi recebido pela porta serial e se encontra disponvel na varivel 
-* apontada por pData.
-* \return SERIALCOM_ERROR_MAXWAITFORRECEPTION : Nenhum bayte chegou dentro do tempo estipulado por MaximaEsperaUS
-* \warning Essa funcao fica bloqueada por at MaximaEsperaUS enquanto um byte no chegar.
+* Function waits for a byte to be received in the serial port until MaximaEsperaUS, in microseconds.
+* If a data arrive inside the time given by MaximaEsperaUS, pData will point to it.
+* \param pSerialPortConfig Pointer to SERIALPORCONFIG that holds information about
+* the serial port in context of the calling thread.
+* \param pData Pointer to received byte.
+* \param MaximaEsperaUS Maximum waiting time to arrive of a byte in the serial port.
+* \return SERIALCOM_SUCCESS : Successful. A received byte is available and it is pointed by pData.
+* \return SERIALCOM_ERROR_MAXWAITFORRECEPTION : Byte did not arrive inside the MaximaEsperaUS.
+* \warning This function pauses until a byte arrive or MaximaEsperaUS.
 */
 int serialcom_receivebyte(PSERIALPORTCONFIG pSerialPortConfig, unsigned char *pData, double MaximaEsperaUS)
 {
@@ -344,5 +349,3 @@ Antes de executar esse arquivo  necessrio pelo menos uma vez aps ter iniciado o 
 Para isso, basta executar o script loadmods.
 
 */
-
-
