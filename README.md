@@ -67,7 +67,7 @@ int main()
     usleep(5);
 
     // Close the serial port
-    if((err = serialcom_close(&gps_SerialPortConfig_)) != SERIALCOM_SUCCESS)
+    if((err = serialcom_close(&SerialPortConfig)) != SERIALCOM_SUCCESS)
     {
         return err;
     }
