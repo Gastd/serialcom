@@ -1,15 +1,16 @@
-serialcom
-=========
+# serialcom
 
 The serialcom library provides accessing serial ports on LINUX systems with real-time RTAI compatibility. This library was thought to be compatible with a process with multiples threads and allows that multiples threads can access the same serial port each time. In that case, these functionalities are implemented to COM1, COM2, COM3, and COM4. Also, this library implements functions to access by semaphores, which allows the same serial port to be access by multiples threads per once.
 
+# Quickstart
 
-Dependencies
-------------
+### Dependencies
+
 * Only [pthreads](https://en.wikipedia.org/wiki/POSIX_Threads), that is usually installed within any Linux system.
 
-Usage
------
+### Usage
+
+#### Link
 
 A CMake code is provided in hopes of help the link process.
 To link this library against your project use the code below in your CMakeLists.txt file.
@@ -39,8 +40,35 @@ target_link_libraries( <YOUR_EXECUTABLE>
     -pthread
 )
 ```
+#### API
 
-Documentation
--------------
+```c
+SERIALPORTCONFIG serialPortConfig;
+char* data;
+
+// Init the serial port
+if((err = serialcom_init(&serialPortConfig, 1, "/dev/ttyUSB0", 9600)) != SERIALCOM_SUCCESS)
+{
+    return err;
+}
+
+// Receive byte
+if((err = serialcom_receivebyte(&serialPortConfig, &data, 1e4)) != SERIALCOM_SUCCESS)
+{
+    return err;
+}
+
+// Send the same byte
+serialcom_sendbyte(&serialPortConfig, (unsigned char*) &data);
+usleep(5);
+
+// Close the serial port
+if((err = serialcom_close(&gps_SerialPortConfig_)) != SERIALCOM_SUCCESS)
+{
+    return err;
+}
+```
+
+# Documentation
 
 Documentation (and further explanations) for the code is available in the source code files.
