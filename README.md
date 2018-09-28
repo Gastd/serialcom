@@ -67,7 +67,7 @@ int main()
     usleep(5);
 
     // Close the serial port
-    if((err = serialcom_close(&SerialPortConfig)) != SERIALCOM_SUCCESS)
+    if((err = serialcom_close(&serialPortConfig)) != SERIALCOM_SUCCESS)
     {
         return err;
     }
